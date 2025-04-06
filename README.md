@@ -4,4 +4,5 @@ Parse [`ca65.sgml`](https://github.com/cc65/cc65/blob/master/doc/ca65.sgml) from
 The goal of the resulting JSON is for help doc to be shown, during autocomplete & hover, when using the ca65-lsp language server.
 
 This code uses a `Stream` struct written by Simon Hochrein for the aforementioned `ca65-lsp` project.
+
 It also contains a copy of `ca65.sgml` from [`cc65`](https://github.com/cc65/cc65).
