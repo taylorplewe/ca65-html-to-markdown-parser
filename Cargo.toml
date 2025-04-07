@@ -1,5 +1,5 @@
 [package]
-name = "ca65-sgml-to-markdown-parser"
+name = "ca65-html-to-markdown-parser"
 version = "0.1.0"
 edition = "2024"
 
