@@ -4,7 +4,6 @@ use std::{
     collections::HashMap,
     io::Read,
 };
-use std::io::Write;
 use stream::Stream;
 
 fn print_error_and_exit(msg: &str) {
@@ -25,15 +24,17 @@ fn main() {
     let mut ca65_html_parser = Ca65HtmlParser::new(ca65_html_stream);
     let hm = ca65_html_parser.parse_to_hashmap();
 
-    for (k, v) in &hm {
-        println!("{k} ::\n");
-        println!("{v}-----------------\n\n\n\n");
-    }
+    // for (k, v) in &hm {
+    //     println!("{k} ::\n");
+    //     println!("{v}-----------------\n\n\n\n");
+    // }
 
     let json_location = include_str!("../json-location.txt");
     if let Ok(json) = serde_json::to_string(&hm) {
         if std::fs::write(json_location, json).is_err() {
             print_error_and_exit(&format!("could not write to JSON file at {json_location}"));
+        } else {
+            println!("\x1b[32mSuccessfully wrote JSON to \x1b[0m{json_location}");
         }
     } else {
         print_error_and_exit("could not serialize markdown hashmap to JSON");
@@ -47,6 +48,7 @@ struct Ca65HtmlParser {
     curr_key: String,
     curr_description: String,
     curr_href: String,
+    is_href_code: bool,
 }
 
 impl Ca65HtmlParser {
@@ -58,6 +60,7 @@ impl Ca65HtmlParser {
             curr_key: String::from(""),
             curr_description: String::from(""),
             curr_href: String::from(""),
+            is_href_code: false,
         }
     }
     fn parse_to_hashmap(&mut self) -> HashMap<String, String> {
@@ -122,10 +125,20 @@ impl Ca65HtmlParser {
                                 "h2" => self.curr_description.push_str("\n---\n"),
                                 "blockquote" => self.curr_description.push_str("```\n"),
                                 "a" => if !self.is_in_element_stack("h2") {
+                                    if self.is_href_code {
+                                        self.curr_description.push('`');
+                                    }
                                     self.curr_description.push_str(&format!("]({})", self.curr_href));
                                 },
                                 "p" => self.curr_description.push_str("\n\n"),
                                 "ul" => self.curr_description.push('\n'),
+                                "code" => if !self.is_in_element_stack("blockquote") {
+                                    if self.is_href_code {
+                                        self.is_href_code = false;
+                                    } else {
+                                        self.curr_description.push('`');
+                                    }
+                                },
                                 _ => (),
                             }
                         }
@@ -141,17 +154,17 @@ impl Ca65HtmlParser {
                         "hr".to_string(),
                         "li".to_string(), // ca65.html doesn't always close it's <li>'s
                     ]).contains(&element_name.to_lowercase()) {
-                        if element_name != "p" || self.input.peek_next().is_some_and(|cc| cc != '\n') {
+                        if element_name != "p" || self.input.peek_next() != Some('\n') {
                             self.element_stack.push(element_name.to_lowercase().clone());
                         }
                     }
                 }
-                if self.input.advance().is_some_and(|c_after_element_name| c_after_element_name == ' ') {
+                if self.input.advance() == Some(' ') {
                     if element_name == "a" {
                         self.start = self.input.pos();
                         self.consume_until_after(&['"']);
                         if self.element_stack.len() > 1 && self.element_stack[self.element_stack.len() - 2] == "h2" {
-                            if self.input.peek().is_some_and(|cc| cc == '.') && self.current_string() == "NAME=\"" {
+                            if self.input.peek() == Some('.') && self.current_string() == "NAME=\"" {
                                 self.start = self.input.pos();
                                 self.consume_until_before(&['"']);
                                 self.curr_key = self.current_string().clone();
@@ -168,7 +181,13 @@ impl Ca65HtmlParser {
                             } else if self.curr_href.starts_with("ca65.html") {
                                 self.curr_href.insert_str(0, "https://cc65.github.io/doc/");
                             }
-                            self.curr_description.push('[');
+                            if self.curr_description.ends_with('`') {
+                                self.is_href_code = true;
+                                self.curr_description.pop();
+                                self.curr_description.push_str("[`");
+                            } else {
+                                self.curr_description.push('[');
+                            }
                         }
                     }
                     self.consume_until_after(&['>']);
@@ -181,9 +200,9 @@ impl Ca65HtmlParser {
                             self.curr_description = "".to_string();
                         },
                         "blockquote" => self.curr_description.push_str("```ca65"),
-                        // "code" => if !self.is_in_element_stack("blockquote") {
-                        //     self.curr_description.push('`');
-                        // }
+                        "code" => if !self.is_in_element_stack("blockquote") {
+                            self.curr_description.push('`');
+                        }
                         "li" => self.curr_description.push_str("\n- "),
                         "dd" => self.curr_description.push_str("\n\n"),
                         _ => (),
