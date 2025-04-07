@@ -4,5 +4,3 @@ Parse `ca65.html` ([`sgml` version](https://github.com/cc65/cc65/blob/master/doc
 The goal of the resulting JSON is for help doc for ca65 keywords (like `.macro`) to be shown, during autocomplete & hover, when using the ca65-lsp language server.
 
 This code uses a `Stream` struct written by Simon Hochrein for the aforementioned `ca65-lsp` project.
-
-It also contains a copy of `ca65.html` from [`cc65`](https://github.com/cc65/cc65).
