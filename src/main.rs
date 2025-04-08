@@ -31,7 +31,7 @@ fn main() {
     // }
 
     // write JSON-serialized data to output file
-    if let Ok(json) = serde_json::to_string(&hm) {
+    if let Ok(json) = serde_json::to_string_pretty(&hm) {
         if std::fs::write(json_location, json).is_err() {
             print_error_and_exit(&format!("could not write to JSON file at {json_location}"));
         } else {
