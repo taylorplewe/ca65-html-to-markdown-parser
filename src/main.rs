@@ -3,12 +3,20 @@ mod ca65_html_parser;
 
 use std::{
     io::Read,
+    collections::HashMap,
 };
+use serde::Serialize;
 use stream::Stream;
 
 fn print_error_and_exit(msg: &str) {
     eprintln!("\x1b[31mERROR\x1b[0m {msg}");
     std::process::exit(1);
+}
+
+#[derive(Serialize)]
+struct Ca65Doc {
+    keywords_to_markdown: HashMap<String, String>,
+    duplicate_keywords_to_keywords: HashMap<String, String>,
 }
 
 fn main() {
@@ -23,7 +31,19 @@ fn main() {
     // parse ca65.html to a <String, String> hashmap
     let ca65_html_stream = Stream::new(ca65_html_contents);
     let mut ca65_html_parser = ca65_html_parser::Ca65HtmlParser::new(ca65_html_stream);
-    let hm = ca65_html_parser.parse_to_hashmap();
+    let ca65_doc = Ca65Doc {
+        keywords_to_markdown: ca65_html_parser.parse_to_hashmap(),
+        duplicate_keywords_to_keywords: HashMap::<String, String>::from([
+            (".MAC".to_string(), ".MACRO".to_string()),
+            (".ENDMAC".to_string(), ".ENDMACRO".to_string()),
+            (".DELMAC".to_string(), ".DELMACRO".to_string()),
+            (".ISMNEM".to_string(), ".ISMNEMONIC".to_string()),
+            (".REF".to_string(), ".REFERENCED".to_string()),
+            (".DEF".to_string(), ".DEFINED".to_string()),
+            (".BYT".to_string(), ".BYTE".to_string()),
+            (".REFTO".to_string(), ".REFERTO".to_string()),
+        ]),
+    };
 
     // for (k, v) in &hm {
     //     println!("{k} ::\n");
@@ -31,7 +51,7 @@ fn main() {
     // }
 
     // write JSON-serialized data to output file
-    if let Ok(json) = serde_json::to_string_pretty(&hm) {
+    if let Ok(json) = serde_json::to_string_pretty(&ca65_doc) {
         if std::fs::write(json_location, json).is_err() {
             print_error_and_exit(&format!("could not write to JSON file at {json_location}"));
         } else {
