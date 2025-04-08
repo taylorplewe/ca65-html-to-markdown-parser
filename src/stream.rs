@@ -23,14 +23,6 @@ impl Stream {
         }
     }
 
-    pub fn peek_next(&self) -> Option<char> {
-        if self.position + 1 >= self.input.len() {
-            None
-        } else {
-            Some(self.input.as_bytes()[self.position + 1] as char)
-        }
-    }
-
     pub fn at_end(&self) -> bool {
         self.position >= self.input.len()
     }
