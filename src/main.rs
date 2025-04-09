@@ -16,7 +16,7 @@ fn print_error_and_exit(msg: &str) {
 #[derive(Serialize)]
 struct Ca65Doc {
     keywords_to_markdown: HashMap<String, String>,
-    duplicate_keywords_to_keywords: HashMap<String, String>,
+    aliases: HashMap<String, String>,
 }
 
 fn main() {
@@ -33,7 +33,7 @@ fn main() {
     let mut ca65_html_parser = ca65_html_parser::Ca65HtmlParser::new(ca65_html_stream);
     let ca65_doc = Ca65Doc {
         keywords_to_markdown: ca65_html_parser.parse_to_hashmap(),
-        duplicate_keywords_to_keywords: HashMap::<String, String>::from([
+        aliases: HashMap::<String, String>::from([
             (".MAC".to_string(), ".MACRO".to_string()),
             (".ENDMAC".to_string(), ".ENDMACRO".to_string()),
             (".DELMAC".to_string(), ".DELMACRO".to_string()),
