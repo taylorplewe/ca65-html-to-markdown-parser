@@ -37,11 +37,16 @@ fn main() {
             (".MAC".to_string(), ".MACRO".to_string()),
             (".ENDMAC".to_string(), ".ENDMACRO".to_string()),
             (".DELMAC".to_string(), ".DELMACRO".to_string()),
+            (".EXITMAC".to_string(), ".EXITMACRO".to_string()),
             (".ISMNEM".to_string(), ".ISMNEMONIC".to_string()),
             (".REF".to_string(), ".REFERENCED".to_string()),
             (".DEF".to_string(), ".DEFINED".to_string()),
             (".BYT".to_string(), ".BYTE".to_string()),
             (".REFTO".to_string(), ".REFERTO".to_string()),
+            (".PAGELEN".to_string(), ".PAGELENGTH".to_string()),
+            (".UNDEF".to_string(), ".UNDEFINE".to_string()),
+            (".FILEOPT".to_string(), ".FOPT".to_string()),
+            (".ENDREP".to_string(), ".ENDREPEAT".to_string()),
         ]),
     };
 
