@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use serde::Serialize;
 use crate::stream::Stream;
 
 pub struct Ca65HtmlParser {
@@ -9,6 +10,12 @@ pub struct Ca65HtmlParser {
     curr_description: String,
     curr_href: String,
     is_href_code: bool,
+}
+
+#[derive(Serialize)]
+pub struct KeywordInfo {
+    documentation: String,
+    snippet_type: String,
 }
 
 impl Ca65HtmlParser {
@@ -23,8 +30,8 @@ impl Ca65HtmlParser {
             is_href_code: false,
         }
     }
-    pub fn parse_to_hashmap(&mut self) -> HashMap<String, String> {
-        let mut hm = HashMap::<String, String>::new();
+    pub fn parse_to_hashmap(&mut self) -> HashMap<String, KeywordInfo> {
+        let mut hm = HashMap::<String, KeywordInfo>::new();
         while !self.input.at_end() {
             if let Some(c) = self.input.advance() {
                 if c != '<' {
@@ -127,10 +134,10 @@ impl Ca65HtmlParser {
                         self.start = self.input.pos();
                         self.consume_until_after(&['"']);
                         if self.element_stack.len() > 1 && self.element_stack[self.element_stack.len() - 2] == "h2" {
-                            if self.input.peek() == Some('.') && self.current_string() == "NAME=\"" {
+                            if self.input.match_char('.') && self.current_string() == "NAME=\"." {
                                 self.start = self.input.pos();
                                 self.consume_until_before(&['"']);
-                                self.curr_key = self.current_string().clone();
+                                self.curr_key = self.current_string().to_lowercase().clone();
                             }
                         } else if !self.curr_key.is_empty()
                             && !self.is_in_element_stack("h2")
@@ -158,7 +165,10 @@ impl Ca65HtmlParser {
                 if !is_closing_el && !self.curr_key.is_empty() {
                     match element_name.as_str() {
                         "h2" => {
-                            hm.insert(self.curr_key.clone(), self.curr_description.clone());
+                            hm.insert(self.curr_key.clone(), KeywordInfo {
+                                documentation: self.curr_description.clone(),
+                                snippet_type: String::new(),
+                            });
                             self.curr_key = "".to_string();
                             self.curr_description = "".to_string();
                         },
