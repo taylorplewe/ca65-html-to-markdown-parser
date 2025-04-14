@@ -10,6 +10,7 @@ pub struct Ca65HtmlParser {
     curr_description: String,
     curr_href: String,
     is_href_code: bool,
+    snippet_types: HashMap<String, String>,
 }
 
 #[derive(Serialize)]
@@ -20,6 +21,15 @@ pub struct KeywordInfo {
 
 impl Ca65HtmlParser {
     pub fn new(input: Stream) -> Self {
+        let snippet_types: HashMap<String, Vec<String>> = serde_json::from_str(include_str!("../ca65-keyword-snippets.json")).expect("Could not deserialize snippet type json");
+        let snippet_type_map: HashMap<String, String> = snippet_types
+            .into_iter()
+            .flat_map(move |(snippet_type, member_list)| {
+                member_list.into_iter().map(move |keyword| (keyword, snippet_type.clone()))
+            })
+            .collect();
+
+
         Self {
             input,
             start: 0,
@@ -28,6 +38,7 @@ impl Ca65HtmlParser {
             curr_description: String::from(""),
             curr_href: String::from(""),
             is_href_code: false,
+            snippet_types: snippet_type_map,
         }
     }
     pub fn parse_to_hashmap(&mut self) -> HashMap<String, KeywordInfo> {
@@ -167,7 +178,10 @@ impl Ca65HtmlParser {
                         "h2" => {
                             hm.insert(self.curr_key.clone(), KeywordInfo {
                                 documentation: self.curr_description.clone(),
-                                snippet_type: String::new(),
+                                snippet_type: self.snippet_types
+                                    .get(&self.curr_key)
+                                    .expect("Could not retrieve snippet type for a given key")
+                                    .clone(),
                             });
                             self.curr_key = "".to_string();
                             self.curr_description = "".to_string();
