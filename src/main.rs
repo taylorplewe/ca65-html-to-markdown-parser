@@ -7,6 +7,7 @@ use std::{
 };
 use serde::Serialize;
 use stream::Stream;
+use ca65_html_parser::KeywordInfo;
 
 fn print_error_and_exit(msg: &str) {
     eprintln!("\x1b[31mERROR\x1b[0m {msg}");
@@ -14,9 +15,9 @@ fn print_error_and_exit(msg: &str) {
 }
 
 #[derive(Serialize)]
-struct Ca65Doc {
-    keywords_to_markdown: HashMap<String, String>,
-    aliases: HashMap<String, String>,
+struct IndexedDocumentation {
+    keys_to_doc: HashMap<String, KeywordInfo>,
+    keys_with_shared_doc: HashMap<String, String>,
 }
 
 fn main() {
@@ -31,22 +32,22 @@ fn main() {
     // parse ca65.html to a <String, String> hashmap
     let ca65_html_stream = Stream::new(ca65_html_contents);
     let mut ca65_html_parser = ca65_html_parser::Ca65HtmlParser::new(ca65_html_stream);
-    let ca65_doc = Ca65Doc {
-        keywords_to_markdown: ca65_html_parser.parse_to_hashmap(),
-        aliases: HashMap::<String, String>::from([
-            (".MAC".to_string(), ".MACRO".to_string()),
-            (".ENDMAC".to_string(), ".ENDMACRO".to_string()),
-            (".DELMAC".to_string(), ".DELMACRO".to_string()),
-            (".EXITMAC".to_string(), ".EXITMACRO".to_string()),
-            (".ISMNEM".to_string(), ".ISMNEMONIC".to_string()),
-            (".REF".to_string(), ".REFERENCED".to_string()),
-            (".DEF".to_string(), ".DEFINED".to_string()),
-            (".BYT".to_string(), ".BYTE".to_string()),
-            (".REFTO".to_string(), ".REFERTO".to_string()),
-            (".PAGELEN".to_string(), ".PAGELENGTH".to_string()),
-            (".UNDEF".to_string(), ".UNDEFINE".to_string()),
-            (".FILEOPT".to_string(), ".FOPT".to_string()),
-            (".ENDREP".to_string(), ".ENDREPEAT".to_string()),
+    let ca65_doc = IndexedDocumentation {
+        keys_to_doc: ca65_html_parser.parse_to_hashmap(),
+        keys_with_shared_doc: HashMap::<String, String>::from([
+            ("mac".to_string(), "macro".to_string()),
+            ("endmac".to_string(), "endmacro".to_string()),
+            ("delmac".to_string(), "delmacro".to_string()),
+            ("exitmac".to_string(), "exitmacro".to_string()),
+            ("ismnem".to_string(), "ismnemonic".to_string()),
+            ("ref".to_string(), "referenced".to_string()),
+            ("def".to_string(), "defined".to_string()),
+            ("byt".to_string(), "byte".to_string()),
+            ("refto".to_string(), "referto".to_string()),
+            ("pagelen".to_string(), "pagelength".to_string()),
+            ("undef".to_string(), "undefine".to_string()),
+            ("fileopt".to_string(), "fopt".to_string()),
+            ("endrep".to_string(), "endrepeat".to_string()),
         ]),
     };
 
